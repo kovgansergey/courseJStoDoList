@@ -4,17 +4,14 @@ const todoControl = document.querySelector('.todo-control');
 const headerInput = document.querySelector('.header-input');
 const todoList = document.querySelector('.todo-list');
 const todoCompleted = document.querySelector('.todo-completed');
+let todoData;
+let json = localStorage.getItem('todoData');
 
-const todoData = [
-  {
-    value: 'Сварить кофе',
-    completed: false
-  },
-  {
-    value: 'Помыть посуду',
-    completed: true
-  }
-];
+if (!json) {
+  todoData = [];
+} else {
+  todoData = JSON.parse(json);
+}
 
 function render() {
   todoList.textContent = '';
@@ -36,12 +33,31 @@ function render() {
           todoList.append(li);
         }
 
-        
+        const todoCompleteBtn = li.querySelector('.todo-complete');
+        todoCompleteBtn.addEventListener('click', function() {
+          item.completed = !item.completed;
+          render();
+        });
+
+        const todoRemoveBtn = li.querySelector('.todo-remove');
+        todoRemoveBtn.addEventListener('click', function() {
+          let pos = todoData.indexOf(item);
+          todoData.splice(pos, 1);
+          render();
+        });
   });
+  
+  json = JSON.stringify(todoData);
+  localStorage.setItem('todoData', json);
 }
 
 todoControl.addEventListener('submit', function(event) {
   event.preventDefault();
+
+  if (headerInput.value.trim() === '') {
+    alert('Заполните поле!');
+    return;
+  }
 
   const newTodo = {
     value: headerInput.value,
@@ -50,5 +66,9 @@ todoControl.addEventListener('submit', function(event) {
 
   todoData.push(newTodo);
 
+  headerInput.value = '';
+
   render();
 });
+
+render();
