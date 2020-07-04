@@ -28,6 +28,7 @@ class ToDo {
     li.insertAdjacentHTML('beforeend', `
       <span class="text-todo">${item.value}</span>
       <div class="todo-buttons">
+        <button class="todo-edit"></button>
         <button class="todo-remove"></button>
         <button class="todo-complete"></button>
       </div>
@@ -60,14 +61,73 @@ class ToDo {
     return Math.random().toString(16).substring(2, 15) + Math.random().toString(16).substring(2, 15);
   }
 
+  hideItemAnimate(elem) {
+    let coin = 0;
+
+    requestAnimationFrame(function hiding() {
+      elem.style.transform = `translateX(-${coin}%)`;
+
+      if (coin < 111) {
+        coin += 3;
+        requestAnimationFrame(hiding);
+      }
+    });
+  }
+
+  emergenceItemAnimate(elem) {
+    let coin = 111;
+
+    requestAnimationFrame(function emergence() {
+      elem.style.transform = `translateX(-${coin}%)`;
+
+      if (coin > 0) {
+        coin -= 3;
+        requestAnimationFrame(emergence);
+      }
+    });
+  }
+
   deleteItem(item) {
-    this.todoData.delete(item.key);
-    this.render();
+    this.hideItemAnimate(item);
+    
+    setTimeout(() => {
+      this.todoData.delete(item.key);
+      this.render();
+    }, 673);
   }
 
   completedItem(item) {
-    this.todoData.get(item.key).completed = !this.todoData.get(item.key).completed;
-    this.render();
+    this.hideItemAnimate(item);
+
+    setTimeout(() => {
+      this.todoData.get(item.key).completed = !this.todoData.get(item.key).completed;
+      this.render();
+      
+      const newItem = document.querySelectorAll('.todo-item');
+      newItem.forEach(element => {
+        if (element.key === item.key) {
+          this.emergenceItemAnimate(element);
+        }
+      });
+    }, 673);
+  }
+
+  editItem(item) {
+    const changeText = () => {
+      if (item.textContent.trim()) {
+        this.todoData.get(item.key).value = item.textContent.trim();
+        this.addToStorage();
+        item.removeAttribute('contenteditable');
+        item.removeEventListener('blur', changeText);
+      } else {
+        alert('Поле не должно быть пустым!');
+        this.render();
+      }
+    };
+
+    item.setAttribute('contenteditable', true);
+    item.addEventListener('blur', changeText);
+    item.focus();
   }
 
   handler() {
@@ -80,6 +140,10 @@ class ToDo {
 
       if (target.classList.contains('todo-remove')) {
         this.deleteItem(target.closest('li'));
+      }
+
+      if (target.classList.contains('todo-edit')) {
+        this.editItem(target.closest('li'));
       }
     });
   }
